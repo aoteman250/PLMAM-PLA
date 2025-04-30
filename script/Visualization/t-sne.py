@@ -71,7 +71,7 @@ for _p in ['test']:
     all_logits1.append(intermediate_outputs)
 
 
-# 将所有批次的中间输出拼接在一起
+
 all_logits1 = torch.cat(all_logits1)
 all_y = torch.cat(all_y)
 
@@ -80,15 +80,15 @@ all_y = torch.cat(all_y)
 tsne = TSNE(n_components=2, verbose=1, perplexity=50, n_iter=1000)  # 增大perplexity适应大数据
 fused_features_2d = tsne.fit_transform(all_logits1.cpu().numpy())
 
-## 归一化真实值y
+
 min_value = all_y.min().item()
 max_value = all_y.max().item()
 normalized_y = (all_y - min_value) / (max_value - min_value)
 
-# 创建一个颜色映射，例如，使用归一化后的y的真实值来决定颜色
+
 colors = plt.cm.coolwarm(normalized_y.cpu().numpy())
 
-# 绘制t-SNE降维后的数据点
+
 plt.figure(figsize=(10, 8))
 scatter = plt.scatter(fused_features_2d[:, 0], fused_features_2d[:, 1], c=colors, alpha=0.8)
 # 设定坐标轴范围
