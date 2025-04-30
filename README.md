@@ -73,3 +73,5 @@ outputs.pooler_output
    - `dataset.py` is the data preparation phase.
    - `cross_attention.py` implements cross attention mechanisms.
    - `model.py` implements the PLMAM-PLA which consists of a feature extraction module, a feature enhancement module, a feature fusion module and an output module.
+   - The `Variant models` folder contains the variant models from the ablation experiments.
+   - The `Visualization` folder contains the visualization code used in the interpretability analysis experiment.
