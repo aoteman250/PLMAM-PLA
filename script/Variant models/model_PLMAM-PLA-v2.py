@@ -36,6 +36,7 @@ class ResDilaCNNBlocks(nn.Module):
                                         ResDilaCNNBlock(dilaSizeList[i % len(dilaSizeList)], filterSize,
                                                         ))
         self.act = nn.ReLU()
+        self.SELayer = SELayer(256)
 
 
 
@@ -43,24 +44,33 @@ class ResDilaCNNBlocks(nn.Module):
         # x: batchSize × seqLen × feaSize
         x = self.linear(x)  # => batchSize × seqLen × filterSize
         x = self.blockLayers(x.transpose(1, 2))  # => batchSize × seqLen × filterSize
-
-
+        x = self.SELayer(x)
         x = self.act(x.transpose(1, 2))  # => batchSize × seqLen × filterSize
-
-
         return x
 
+class SELayer(nn.Module):
+    def __init__(self, channel, reduction=16):
+        super(SELayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool1d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channel, channel // reduction),
+            nn.ReLU(inplace=True),
+            nn.Linear(channel // reduction, channel),
+            nn.Sigmoid()
+        )
 
+    def forward(self, x):
+        b, c, d = x.size()  
+        y = self.avg_pool(x) 
+        y = y.view(b, c)  
+        y = self.fc(y)  
+        y = y.view(b, c, 1) 
+        return x * y.expand_as(x) 
 
 class SKConv(nn.Module):
     def __init__(self, in_channels=320, out_channels=256, stride=1, M=2, r=8, L=32):
         '''
-        :param in_channels: 输入通道维度
-        :param out_channels: 输出通道维度，输入输出通道维度相同
-        :param M: 分支数
-        :param r: 特征Z的长度，计算其维度d时所需的比率
-        :param L: 默认为32
-        采用分组卷积： groups = 32，所以输入channel的数值必须是group的整数倍
+
         '''
         super(SKConv, self).__init__()
         d = max(in_channels // r, L)  # 计算从向量C降维到向量Z的长度d
@@ -73,14 +83,14 @@ class SKConv(nn.Module):
                 nn.BatchNorm1d(out_channels),
                 nn.ReLU(inplace=True)
             ))
-        self.global_pool = nn.AdaptiveAvgPool1d(output_size=1)  # 自适应池化到指定维度，这里指定为1，实现GAP
+        self.global_pool = nn.AdaptiveAvgPool1d(output_size=1) 
         self.fc1 = nn.Sequential(
             nn.Conv1d(out_channels, d, kernel_size=1, bias=False),
             nn.BatchNorm1d(d),
             nn.ReLU(inplace=True)
         )  # 降维
-        self.fc2 = nn.Conv1d(d, out_channels * M, kernel_size=1, bias=False)  # 升维
-        self.softmax = nn.Softmax(dim=1)  # 指定dim=1使得多个全连接层对应位置进行softmax,保证对应位置a+b+..=1
+        self.fc2 = nn.Conv1d(d, out_channels * M, kernel_size=1, bias=False)  
+        self.softmax = nn.Softmax(dim=1) 
 
     def forward(self, input):
         input = input.transpose(1, 2)
@@ -91,18 +101,18 @@ class SKConv(nn.Module):
             output.append(conv(input))  # [batch_size, out_channels, d]
 
         # the part of fusion
-        U = reduce(lambda x, y: x + y, output)  # 逐元素相加生成混合特征U [batch_size, channel, d]
+        U = reduce(lambda x, y: x + y, output)  #  [batch_size, channel, d]
         s = self.global_pool(U)  # [batch_size, channel, 1]
         z = self.fc1(s)  # S->Z降维 [batch_size, d, 1]
         a_b = self.fc2(z)  # Z->a，b升维 [batch_size, out_channels * M, 1]
-        a_b = a_b.view(batch_size, self.M, self.out_channels, -1)  # 调整形状 [batch_size, M, out_channels, 1]
-        a_b = self.softmax(a_b)  # 使得多个全连接层对应位置进行softmax [batch_size, M, out_channels, 1]
+        a_b = a_b.view(batch_size, self.M, self.out_channels, -1)  #  [batch_size, M, out_channels, 1]
+        a_b = self.softmax(a_b)  #  [batch_size, M, out_channels, 1]
 
         # the part of selection
         a_b = list(a_b.chunk(self.M, dim=1))  # 分割成多个 [batch_size, 1, out_channels, 1], [batch_size, 1, out_channels, 1]
         a_b = list(map(lambda x: x.view(batch_size, self.out_channels, 1), a_b))  # 调整形状 [batch_size, out_channels, 1]
-        V = list(map(lambda x, y: x * y, output, a_b))  # 权重与对应不同卷积核输出的U逐元素相乘
-        V = reduce(lambda x, y: x + y, V)  # 多个加权后的特征逐元素相加 [batch_size, out_channels, d]
+        V = list(map(lambda x, y: x * y, output, a_b))  # 
+        V = reduce(lambda x, y: x + y, V)  # 
         # V = self.max_pool(V).squeeze(2)
         # V = Reduce('b c t -> b c', 'max')(V)
         V = V.transpose(1, 2)
@@ -238,8 +248,8 @@ class MultiViewNet(nn.Module):
 
 
         self.transform = nn.Sequential(
-            nn.LayerNorm(1024),
-            nn.Linear(1024, 512),
+            nn.LayerNorm(512),
+            nn.Linear(512, 512),
             nn.Dropout(0.2),
             nn.ReLU(),
             nn.Linear(512, 256),
@@ -270,7 +280,7 @@ class MultiViewNet(nn.Module):
         pro1 = self.seq_attention_tdlig(logits1,logits,logits)
 
 
-        all_features = torch.stack([drug,pro,drug1,pro1], dim=2)
+        all_features = torch.stack([drug1,pro1], dim=2)
         all_features = self.norm(all_features.permute(0, 2, 1))
         all_features = self.feature_interact(all_features)
 
