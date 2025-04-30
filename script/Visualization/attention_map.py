@@ -58,62 +58,6 @@ def test(model: nn.Module, test_loader, device, show, _p):
     return y_hat,pro,pro1,attn_merged
 
 
-
-# def plot_attention_paper_style(sequence, attention, title='Attention per Residue', per_line=40):
-#     import numpy as np
-#     import matplotlib.pyplot as plt
-#     from matplotlib.colors import Normalize
-#     from matplotlib import cm
-#
-#     assert len(sequence) == len(attention), "序列长度与注意力长度不匹配"
-#
-#     # === 归一化 attention ===
-#     # min_val = np.min(attention)
-#     # max_val = np.max(attention)
-#     # if max_val > min_val:
-#     #     attention = (attention - min_val) / (max_val - min_val)
-#     # else:
-#     #     attention = np.zeros_like(attention)
-#
-#     seq_len = len(sequence)
-#     num_lines = (seq_len + per_line - 1) // per_line
-#     cmap = cm.get_cmap('jet')
-#
-#     fig_height = num_lines * 2.5
-#     fig, ax = plt.subplots(figsize=(16, fig_height))
-#     ax.axis('off')
-#
-#     for i in range(num_lines):
-#         start = i * per_line
-#         end = min((i + 1) * per_line, seq_len)
-#         sub_seq = sequence[start:end]
-#         sub_att = attention[start:end]
-#         y_base = (num_lines - i - 1) * 4
-#
-#         # Number
-#         for j in range(start, end, 10):
-#             ax.text(j - start + 0.5, y_base + 2.7, str(j + 1), fontsize=8, ha='center', va='bottom')
-#
-#         # Sequence
-#         for j, aa in enumerate(sub_seq):
-#             ax.text(j + 0.5, y_base + 1.7, aa, fontsize=10, ha='center', va='center', family='monospace')
-#
-#         # Attention weight (color block)
-#         for j, att in enumerate(sub_att):
-#             color = cmap(att)
-#             ax.add_patch(plt.Rectangle((j, y_base + 0.4), 1, 1, color=color, linewidth=0))
-#
-#     # Colorbar
-#     sm = cm.ScalarMappable(cmap=cmap, norm=Normalize(vmin=0.0, vmax=1.0))
-#     sm.set_array([])
-#     cbar = plt.colorbar(sm, ax=ax, orientation='vertical', fraction=0.015, pad=0.01)
-#     cbar.set_label('Attention Weight', fontsize=10)
-#
-#     plt.suptitle(title, fontsize=14)
-#     plt.subplots_adjust(left=0.05, right=0.95, top=0.93, bottom=0.05)
-#     plt.show()
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
@@ -177,18 +121,12 @@ def plot_1d_attention_heatmap(attention, sequence, title='', save_path='attentio
 
 
 
-
-
-
-
-
-
 model.load_state_dict(torch.load('trained_model.pt'))
 for _p in ['re']:
     y_hat,att2,att4,attn_merged = test(model, data_loaders[_p], device, SHOW_PROCESS_BAR, _p)
     sequence_str = "RTGYDNREIVMKYIHYKLSQRGYEWDAGSEVVHLTLRQAGDDFSRRYRRDFAEMSSQLHLTPFTARGRFATVVEELFRDGVNWGRIVAFFEFGGVMCVESVNREMSPLVDNIALWMTEYLNRHLHTWIQDNGGWDAFVELYGP"
     # att2_crop = att2[0, :143, :92]
-    avg_attention = att4[0, :143]
+    avg_attention = attn_merged[0, :143]
     # avg_attention = att2_crop.mean(dim=1)
     # avg_attention = avg_attention[:143]
     min_val = avg_attention.min()
