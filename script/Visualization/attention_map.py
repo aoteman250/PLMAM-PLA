@@ -98,7 +98,7 @@ def plot_1d_attention_heatmap(attention, sequence, title='', save_path='attentio
     for i, aa in enumerate(sequence):
         ax.text(i, -0.8, aa, ha='center', va='center', fontsize=10, family='monospace')
 
-    # ✅ 设置刻度（注意共 23 个残基）
+    # ✅ 
     tick_pos = np.arange(0, len(sequence), 5)
     tick_labels = np.arange(121, 144, 5)
     ax.set_xticks(tick_pos)
