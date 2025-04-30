@@ -44,6 +44,7 @@ Python 3.9 and packages version:
    -  The overall architectures of PLMAM-PLA is presented in the following figure, which consists of a feature extraction module, a feature enhancement module, a feature fusion module and an output module.
    -  ![Model Architecture](https://github.com/aoteman250/PLMAM-PLA/blob/main/PLMAM-PLA.jpg)
    -  trained_model.pt is the PLMAM-PLA model that is trained on the training subest of the PDBbind dataset.
+   -  trained_model_LP.pt is the PLMAM-PLA model that is trained on the training subest of the Leak Proof PDBbind dataset.
    -  The ESM-2 model is available at (https://github.com/facebookresearch/esm) and Molformer model is available at (https://huggingface.co/ibm/MoLFormer-XL-both-10pct).
    -   To load the model from Huggingface, we can use the following code:
 ```python
