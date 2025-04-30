@@ -66,6 +66,7 @@ outputs.pooler_output
    -   test_smi.csv, training_smi.csv and validation_smi.csv are ligand SMILES.
    - `get_esm.py` converts protein sequences into token embeddings.
    - `get_sm.py` converts ligand SMILES into token embeddings.
+   - In the `Leak Proof PDBbind` folder is the dataset after repartitioning the PDBbind.
 ### 3.4 **script**
    -   To train the model, we can run `main.py` script using the train and valid dataset.
    -   We can also run `test.py` to test the model.
