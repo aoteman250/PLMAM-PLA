@@ -78,7 +78,7 @@ def plot_1d_attention_heatmap(attention, sequence, title='', save_path='attentio
     from matplotlib.colors import Normalize
     from matplotlib import cm
 
-    # ✅ 提取残基范围：索引 120~143（含前不含后），即编号 121~143
+    # 提取残基范围
     attention = np.asarray(attention[120:143])
     sequence = sequence[120:143]
 
@@ -94,11 +94,11 @@ def plot_1d_attention_heatmap(attention, sequence, title='', save_path='attentio
     fig, ax = plt.subplots(figsize=(6, 2.5))
     im = ax.imshow(attention_2d, cmap='jet', aspect='equal', interpolation='nearest')
 
-    # ✅ 添加氨基酸字母
+
     for i, aa in enumerate(sequence):
         ax.text(i, -0.8, aa, ha='center', va='center', fontsize=10, family='monospace')
 
-    # ✅ 
+
     tick_pos = np.arange(0, len(sequence), 5)
     tick_labels = np.arange(121, 144, 5)
     ax.set_xticks(tick_pos)
